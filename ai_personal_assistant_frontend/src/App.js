@@ -1,9 +1,10 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import './App.css';
 import './index.css';
 import MainLayout from './components/Layout/MainLayout';
 import SettingsModal from './components/Settings/SettingsModal';
 import { useUI } from './state/store';
+import { scheduleHealthPing } from './utils/health';
 
 // PUBLIC_INTERFACE
 function App() {
@@ -17,6 +18,12 @@ function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const handleOpenSettings = useCallback(() => setSettingsOpen(true), []);
   const handleCloseSettings = useCallback(() => setSettingsOpen(false), []);
+
+  // Non-blocking health ping after mount
+  useEffect(() => {
+    // Schedule once per session; helper is idempotent and no-ops in tests/SSR
+    scheduleHealthPing();
+  }, []);
 
   return (
     <div className="App">
