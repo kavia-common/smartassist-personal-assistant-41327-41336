@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Header from './Header';
 import './MainLayout.css';
 import ChatPanel from '../Chat/ChatPanel';
+import Sidebar from '../Sidebar/Sidebar';
 
 /**
  * PUBLIC_INTERFACE
  * MainLayout renders Header and a two-panel main section:
  * - Left: ChatPanel
- * - Right: Sidebar placeholder (collapsible on small screens)
+ * - Right: Sidebar with Tasks/Events (responsive)
  *
  * Props:
  * - theme: 'light' | 'dark'
@@ -15,8 +16,6 @@ import ChatPanel from '../Chat/ChatPanel';
  * - onOpenSettings: () => void
  */
 function MainLayout({ theme, onToggleTheme, onOpenSettings }) {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-
   return (
     <div className="layout-root">
       <Header
@@ -34,40 +33,12 @@ function MainLayout({ theme, onToggleTheme, onOpenSettings }) {
           ]}
         />
 
-        <aside
-          className={`panel sidebar-panel card-surface ${sidebarOpen ? 'open' : 'closed'}`}
-          aria-label="Tasks and events sidebar"
-        >
-          <div className="panel-header sidebar-header">
-            <h2>Tasks & Events</h2>
-            <button
-              type="button"
-              className="btn-ghost small"
-              aria-expanded={sidebarOpen}
-              aria-controls="sidebar-content"
-              onClick={() => setSidebarOpen(s => !s)}
-              title={sidebarOpen ? 'Hide sidebar' : 'Show sidebar'}
-            >
-              {sidebarOpen ? '➖' : '➕'}
-            </button>
-          </div>
-          <div id="sidebar-content" className="panel-body">
-            <ul className="placeholder-list">
-              <li className="placeholder-item">
-                <span className="dot dot-amber" aria-hidden="true"></span>
-                Prepare weekly report — Fri 4:00 PM
-              </li>
-              <li className="placeholder-item">
-                <span className="dot dot-blue" aria-hidden="true"></span>
-                1:1 with Alex — Tue 2:30 PM
-              </li>
-              <li className="placeholder-item">
-                <span className="dot dot-red" aria-hidden="true"></span>
-                Pay credit card — Due tomorrow
-              </li>
-            </ul>
-          </div>
-        </aside>
+        <Sidebar
+          onAddTask={() => { /* placeholder for future wiring */ }}
+          onUpdateTask={() => { /* placeholder for future wiring */ }}
+          onAddEvent={() => { /* placeholder for future wiring */ }}
+          onUpdateEvent={() => { /* placeholder for future wiring */ }}
+        />
       </main>
     </div>
   );

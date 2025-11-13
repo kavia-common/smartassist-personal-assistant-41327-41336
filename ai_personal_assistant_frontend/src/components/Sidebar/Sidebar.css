@@ -1,0 +1,224 @@
+.sidebar-root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--sidebar-bg);
+  border: 1px solid var(--sidebar-border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+/* Header and toggle (mobile) */
+.sidebar-topbar {
+  display: none; /* hidden by default; shown on small screens as overlay opener */
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.sidebar-title {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.sidebar-openbtn {
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  padding: 0.4rem 0.65rem;
+  border-radius: 10px;
+}
+
+/* Drawer container for mobile overlay */
+.sidebar-drawer {
+  display: contents;
+}
+
+.sidebar-content {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 0;
+  height: 100%;
+  background: var(--sidebar-bg);
+}
+
+/* Tabs */
+.sidebar-tabs {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--primary) 4%, var(--surface));
+}
+
+.tab-btn {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--primary) 6%, var(--surface));
+  color: var(--text-primary);
+  padding: 0.45rem 0.7rem;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  box-shadow: var(--shadow-xs);
+}
+.tab-btn[aria-selected="true"] {
+  background: var(--primary);
+  color: #fff;
+  border-color: color-mix(in srgb, var(--primary) 50%, transparent);
+}
+.tab-btn:focus-visible {
+  outline: 3px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* Panel body scroll */
+.sidebar-scroller {
+  overflow: auto;
+  padding: 0.75rem;
+}
+
+/* Lists */
+.item-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+/* Empty state */
+.empty {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  padding: 0.25rem;
+}
+
+/* Add button */
+.add-btn {
+  margin-top: 0.75rem;
+  width: 100%;
+  background: var(--secondary);
+  color: #111;
+  border: 1px solid color-mix(in srgb, var(--secondary) 40%, transparent);
+}
+
+/* Item card shared */
+.item-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem;
+  align-items: center;
+  background: color-mix(in srgb, var(--primary) 4%, var(--surface));
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.6rem 0.75rem;
+  box-shadow: var(--shadow-xs);
+}
+
+.item-title {
+  margin: 0;
+  font-size: 0.98rem;
+  color: var(--text-primary);
+}
+
+.item-meta {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.item-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.icon-btn {
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  padding: 0.35rem 0.5rem;
+  border-radius: 8px;
+}
+
+/* Mobile responsive: overlay drawer */
+@media (max-width: 1024px) {
+  .sidebar-root {
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    background: transparent;
+  }
+
+  .sidebar-topbar {
+    display: flex;
+    border-radius: 12px;
+  }
+
+  .sidebar-drawer {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    align-content: end;
+    pointer-events: none;
+    z-index: 50;
+  }
+
+  .drawer-backdrop {
+    display: none;
+  }
+
+  .drawer-panel {
+    transform: translateY(12px);
+    opacity: 0;
+    max-height: 75vh;
+    pointer-events: none;
+    transition: transform 220ms ease, opacity 200ms ease;
+  }
+
+  .drawer-open .drawer-backdrop {
+    display: block;
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.25);
+    backdrop-filter: blur(2px);
+    pointer-events: auto;
+  }
+
+  .drawer-open .drawer-panel {
+    pointer-events: auto;
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  .drawer-panel {
+    background: var(--sidebar-bg);
+    border-top-left-radius: 14px;
+    border-top-right-radius: 14px;
+    border: 1px solid var(--sidebar-border);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+  }
+}
+
+/* Desktop persistent */
+@media (min-width: 1025px) {
+  .sidebar-topbar {
+    display: none;
+  }
+  .sidebar-drawer {
+    display: contents;
+  }
+  .drawer-backdrop {
+    display: none !important;
+  }
+  .drawer-panel {
+    display: block;
+    height: 100%;
+    border-radius: 12px;
+  }
+}
