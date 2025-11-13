@@ -1,0 +1,69 @@
+.msg-bubble {
+  display: grid;
+  max-width: 78%;
+  margin: 0.35rem 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--primary) 5%, var(--surface));
+  box-shadow: var(--shadow-xs);
+  transition: background-color 200ms ease, border-color 200ms ease, color 200ms ease;
+}
+
+.msg-bubble .msg-inner {
+  padding: 0.6rem 0.8rem;
+}
+
+.msg-bubble .msg-meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  padding-top: 0.25rem;
+}
+
+/* From user: align right, slightly different background */
+.msg-bubble.from-user {
+  justify-self: end;
+  background: color-mix(in srgb, var(--secondary) 8%, var(--surface));
+}
+
+/* From assistant: left aligned */
+.msg-bubble.from-assistant {
+  justify-self: start;
+  background: color-mix(in srgb, var(--primary) 6%, var(--surface));
+}
+
+/* From system: neutral subtle background */
+.msg-bubble.from-system {
+  justify-self: center;
+  background: color-mix(in srgb, var(--primary) 4%, var(--surface));
+}
+
+/* Status accents for assistant */
+.msg-bubble.from-assistant.status-success {
+  border-color: color-mix(in srgb, var(--success) 50%, var(--border));
+  background: color-mix(in srgb, var(--success) 10%, var(--surface));
+}
+.msg-bubble.from-assistant.status-error {
+  border-color: color-mix(in srgb, var(--error) 50%, var(--border));
+  background: color-mix(in srgb, var(--error) 8%, var(--surface));
+}
+
+/* Typography and inline code */
+.msg-content {
+  white-space: pre-wrap; /* Preserve newlines; formatting tokens handled in JS */
+  color: var(--text-primary);
+}
+
+.inline-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  background: color-mix(in srgb, var(--primary) 8%, var(--surface));
+  border: 1px solid var(--border);
+  padding: 0.05rem 0.35rem;
+  border-radius: 6px;
+}
+
+.fmt-bold {
+  font-weight: 700;
+}
+.fmt-italic {
+  font-style: italic;
+}

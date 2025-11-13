@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import Header from './Header';
 import './MainLayout.css';
+import ChatPanel from '../Chat/ChatPanel';
 
 /**
  * PUBLIC_INTERFACE
  * MainLayout renders Header and a two-panel main section:
- * - Left: ChatPanel placeholder
+ * - Left: ChatPanel
  * - Right: Sidebar placeholder (collapsible on small screens)
  *
  * Props:
@@ -25,19 +26,13 @@ function MainLayout({ theme, onToggleTheme, onOpenSettings }) {
       />
 
       <main className="layout-main">
-        <section className="panel chat-panel card-surface" aria-label="Chat panel">
-          <div className="panel-header">
-            <h2>Chat</h2>
-            <p className="muted">Conversational assistant will appear here.</p>
-          </div>
-          <div className="panel-body">
-            <div className="chat-placeholder">
-              <div className="bubble assistant">Hello! How can I help you today?</div>
-              <div className="bubble user">Schedule a meeting with Sarah next Tuesday at 2pm.</div>
-              <div className="bubble assistant success">Got it. I’ll add that to your calendar.</div>
-            </div>
-          </div>
-        </section>
+        <ChatPanel
+          initialMessages={[
+            { id: 'greet-1', role: 'assistant', content: 'Hello! How can I help you today?', status: 'normal' },
+            { id: 'user-1', role: 'user', content: 'Schedule a meeting with Sarah next Tuesday at 2pm.' },
+            { id: 'asst-1', role: 'assistant', content: 'Got it. I’ll add that to your calendar.', status: 'success' },
+          ]}
+        />
 
         <aside
           className={`panel sidebar-panel card-surface ${sidebarOpen ? 'open' : 'closed'}`}
