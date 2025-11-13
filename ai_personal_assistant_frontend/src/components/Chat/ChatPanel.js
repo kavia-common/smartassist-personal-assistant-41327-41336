@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import MessageBubble from './MessageBubble';
 import './ChatPanel.css';
+import useWebSocket from '../../hooks/useWebSocket';
+import { useChat } from '../../state/store';
 
 /**
  * PUBLIC_INTERFACE
@@ -9,55 +11,114 @@ import './ChatPanel.css';
  * - Basic markdown-like formatting is supported by the MessageBubble.
  * - Includes accessibility roles and live region updates.
  *
+ * Behavior:
+ * - Uses global chat store for messages.
+ * - If REACT_APP_WS_URL is present, connects via WebSocket and streams assistant messages.
+ *
  * Props:
  * - initialMessages?: Array<{ id: string, role: 'user'|'assistant'|'system', content: string, status?: 'normal'|'success'|'error', timestamp?: string }>
- * - onSend?: (text: string) => void   // called when user sends a message
+ * - onSend?: (text: string) => void   // optional external handler
  */
 function ChatPanel({ initialMessages = [], onSend }) {
-  const [messages, setMessages] = useState(() =>
-    initialMessages.length
-      ? initialMessages
-      : [
-          {
-            id: 'm1',
-            role: 'assistant',
-            content: 'Hello! How can I help you today?',
-            status: 'normal',
-          },
-        ]
-  );
+  // Global chat state and actions
+  const { state: chat, sendMessage, receiveMessage } = useChat();
+
+  // Local boot messages for initial render if state empty
+  const [bootInjected, setBootInjected] = useState(false);
+
   const [input, setInput] = useState('');
   const transcriptRef = useRef(null);
   const liveRegionRef = useRef(null);
+
+  // On first mount, if there are no messages in global state, inject initialMessages
+  useEffect(() => {
+    if (!bootInjected && chat.messages.length === 0 && initialMessages.length > 0) {
+      initialMessages.forEach((m) => {
+        receiveMessage(m);
+      });
+      setBootInjected(true);
+    }
+  }, [bootInjected, chat.messages.length, initialMessages, receiveMessage]);
+
+  // WebSocket: stream assistant updates into chat slice
+  useWebSocket({
+    onMessage: (payload) => {
+      // Expected payloads:
+      // - JSON object like: { type: "chat_token"|"chat_message", id?, role?, content, done? }
+      // - Or a plain string: treated as assistant content
+      try {
+        if (payload == null) return;
+
+        if (typeof payload === 'string') {
+          // Plain text message from server
+          receiveMessage({
+            role: 'assistant',
+            content: payload,
+            status: 'normal',
+          });
+          return;
+        }
+
+        // JSON object
+        const type = payload.type || 'chat_message';
+        if (type === 'chat_token') {
+          // token-level streaming: append token as a new incremental message id
+          // Simplified approach: each token results in a small assistant message bubble
+          // For richer UX, one could implement an "update last assistant message" action.
+          receiveMessage({
+            id: payload.id || `a-${Date.now()}`,
+            role: payload.role || 'assistant',
+            content: String(payload.content ?? ''),
+            status: 'normal',
+            timestamp: payload.timestamp,
+          });
+        } else if (type === 'chat_message' || type === 'message') {
+          receiveMessage({
+            id: payload.id || `a-${Date.now()}`,
+            role: payload.role || 'assistant',
+            content: String(payload.content ?? ''),
+            status: payload.error ? 'error' : 'success',
+            timestamp: payload.timestamp,
+          });
+        } else {
+          // Unknown type -> fallback as assistant message
+          receiveMessage({
+            id: payload.id || `a-${Date.now()}`,
+            role: payload.role || 'assistant',
+            content: String(payload.content ?? ''),
+            status: 'normal',
+            timestamp: payload.timestamp,
+          });
+        }
+      } catch {
+        // Swallow malformed payload
+      }
+    },
+  });
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
     const el = transcriptRef.current;
     if (!el) return;
     el.scrollTop = el.scrollHeight;
-  }, [messages]);
+  }, [chat.messages]);
 
   // Announce latest message to screen readers
   useEffect(() => {
-    if (!liveRegionRef.current || messages.length === 0) return;
-    const last = messages[messages.length - 1];
+    if (!liveRegionRef.current || chat.messages.length === 0) return;
+    const last = chat.messages[chat.messages.length - 1];
     liveRegionRef.current.textContent = `${last.role} says: ${last.content}`;
-  }, [messages]);
+  }, [chat.messages]);
 
   const handleSend = useCallback(() => {
     const text = input.trim();
     if (!text) return;
 
-    const userMsg = {
-      id: `u-${Date.now()}`,
-      role: 'user',
-      content: text,
-    };
-
-    setMessages((prev) => [...prev, userMsg]);
+    // Add user message to global state
+    sendMessage(text);
     setInput('');
 
-    // Callback for parent to handle API or WS send in future wiring
+    // External callback if provided
     if (onSend) {
       try {
         onSend(text);
@@ -65,23 +126,7 @@ function ChatPanel({ initialMessages = [], onSend }) {
         // swallow for now
       }
     }
-
-    // Placeholder assistant echo to show the flow (can be removed when wired)
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `a-${Date.now()}`,
-          role: 'assistant',
-          content:
-            "I heard: " +
-            text +
-            "\n\nYou can use *italic*, **bold**, and `inline code` here.",
-          status: 'success',
-        },
-      ]);
-    }, 400);
-  }, [input, onSend]);
+  }, [input, onSend, sendMessage]);
 
   const onKeyDown = useCallback(
     (e) => {
@@ -113,7 +158,7 @@ function ChatPanel({ initialMessages = [], onSend }) {
           aria-relevant="additions"
           aria-label="Conversation transcript"
         >
-          {messages.map((m) => (
+          {chat.messages.map((m) => (
             <MessageBubble
               key={m.id}
               role={m.role}
