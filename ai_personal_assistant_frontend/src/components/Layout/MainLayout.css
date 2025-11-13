@@ -1,0 +1,159 @@
+.layout-root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.layout-main {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 1rem;
+  padding: 1rem;
+  width: 100%;
+  max-width: 1280px;
+  margin-inline: auto;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 280px;
+  transition: background-color 240ms ease, border-color 240ms ease, transform 160ms ease, box-shadow 200ms ease;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+.panel-header h2 {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+.panel-header .muted {
+  margin: 0.25rem 0 0;
+  color: var(--text-muted);
+}
+
+.panel-body {
+  padding: 1rem;
+}
+
+.card-surface {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Chat placeholder bubbles */
+.chat-placeholder {
+  display: grid;
+  gap: 0.5rem;
+}
+.bubble {
+  display: inline-block;
+  max-width: 80%;
+  padding: 0.6rem 0.8rem;
+  border-radius: 12px;
+  box-shadow: var(--shadow-xs);
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--primary) 6%, var(--surface));
+}
+.bubble.user {
+  justify-self: end;
+  background: color-mix(in srgb, var(--secondary) 8%, var(--surface));
+}
+.bubble.assistant.success {
+  background: color-mix(in srgb, var(--secondary) 12%, var(--surface));
+}
+
+/* Sidebar */
+.sidebar-panel {
+  overflow: hidden;
+}
+.sidebar-header .small {
+  padding: 0.35rem 0.55rem;
+  font-size: 0.9rem;
+}
+
+/* Collapsible behavior on small screens */
+@media (max-width: 1024px) {
+  .layout-main {
+    grid-template-columns: 1fr;
+  }
+  .sidebar-panel {
+    max-height: 0;
+    opacity: 0;
+    transform: translateY(-6px);
+    pointer-events: none;
+    transition: max-height 260ms ease, opacity 200ms ease, transform 200ms ease;
+  }
+  .sidebar-panel.open {
+    max-height: 520px; /* enough to show content */
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+}
+
+/* Desktop: allow hide/show toggle without affecting layout drastically */
+@media (min-width: 1025px) {
+  .sidebar-panel.closed {
+    width: 0;
+    padding: 0;
+    margin: 0;
+    border-width: 0;
+    opacity: 0;
+    transform: scale(0.98);
+    pointer-events: none;
+  }
+}
+
+/* Placeholder list styles */
+.placeholder-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+.placeholder-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: color-mix(in srgb, var(--primary) 4%, var(--surface));
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.5rem 0.75rem;
+}
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  box-shadow: var(--shadow-xs);
+}
+.dot-amber { background: var(--secondary); }
+.dot-blue { background: var(--primary); }
+.dot-red { background: var(--error); }
+
+/* Ghost buttons */
+.btn-ghost {
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.5rem 0.75rem;
+  transition: background-color 160ms ease, border-color 160ms ease, transform 150ms ease, box-shadow 200ms ease;
+}
+.btn-ghost:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-xs);
+}
+.btn-ghost:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
