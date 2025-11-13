@@ -3,6 +3,7 @@ import MessageBubble from './MessageBubble';
 import './ChatPanel.css';
 import useWebSocket from '../../hooks/useWebSocket';
 import { useChat } from '../../state/store';
+import chatApi from '../../api/chatApi';
 
 /**
  * PUBLIC_INTERFACE
@@ -14,6 +15,7 @@ import { useChat } from '../../state/store';
  * Behavior:
  * - Uses global chat store for messages.
  * - If REACT_APP_WS_URL is present, connects via WebSocket and streams assistant messages.
+ * - Falls back to HTTP chatApi.sendMessage for assistant reply when WS is disabled/unavailable.
  *
  * Props:
  * - initialMessages?: Array<{ id: string, role: 'user'|'assistant'|'system', content: string, status?: 'normal'|'success'|'error', timestamp?: string }>
@@ -21,7 +23,7 @@ import { useChat } from '../../state/store';
  */
 function ChatPanel({ initialMessages = [], onSend }) {
   // Global chat state and actions
-  const { state: chat, sendMessage, receiveMessage } = useChat();
+  const { state: chat, sendMessage, receiveMessage, setLoading } = useChat();
 
   // Local boot messages for initial render if state empty
   const [bootInjected, setBootInjected] = useState(false);
@@ -41,7 +43,7 @@ function ChatPanel({ initialMessages = [], onSend }) {
   }, [bootInjected, chat.messages.length, initialMessages, receiveMessage]);
 
   // WebSocket: stream assistant updates into chat slice
-  useWebSocket({
+  const ws = useWebSocket({
     onMessage: (payload) => {
       // Expected payloads:
       // - JSON object like: { type: "chat_token"|"chat_message", id?, role?, content, done? }
@@ -62,9 +64,7 @@ function ChatPanel({ initialMessages = [], onSend }) {
         // JSON object
         const type = payload.type || 'chat_message';
         if (type === 'chat_token') {
-          // token-level streaming: append token as a new incremental message id
-          // Simplified approach: each token results in a small assistant message bubble
-          // For richer UX, one could implement an "update last assistant message" action.
+          // token-level streaming
           receiveMessage({
             id: payload.id || `a-${Date.now()}`,
             role: payload.role || 'assistant',
@@ -110,6 +110,42 @@ function ChatPanel({ initialMessages = [], onSend }) {
     liveRegionRef.current.textContent = `${last.role} says: ${last.content}`;
   }, [chat.messages]);
 
+  const sendViaApiIfNoWs = useCallback(
+    async (text) => {
+      // If WS is not enabled or not connected, trigger HTTP send
+      if (!ws.enabled || !ws.connected) {
+        setLoading(true);
+        try {
+          const resp = await chatApi.sendMessage(text);
+          if (resp && resp.ok && resp.data) {
+            receiveMessage({
+              id: resp.data.id,
+              role: resp.data.role || 'assistant',
+              content: resp.data.content,
+              status: 'success',
+              timestamp: resp.data.timestamp,
+            });
+          } else {
+            receiveMessage({
+              role: 'assistant',
+              content: (resp && resp.error && (resp.error.message || String(resp.error))) || 'Failed to send message',
+              status: 'error',
+            });
+          }
+        } catch (e) {
+          receiveMessage({
+            role: 'assistant',
+            content: e?.message || 'Failed to send message',
+            status: 'error',
+          });
+        } finally {
+          setLoading(false);
+        }
+      }
+    },
+    [receiveMessage, setLoading, ws.connected, ws.enabled]
+  );
+
   const handleSend = useCallback(() => {
     const text = input.trim();
     if (!text) return;
@@ -117,6 +153,19 @@ function ChatPanel({ initialMessages = [], onSend }) {
     // Add user message to global state
     sendMessage(text);
     setInput('');
+
+    // If websocket enabled and connected, try to send over WS
+    if (ws.enabled && ws.connected) {
+      try {
+        ws.send({ type: 'user_message', content: text });
+      } catch {
+        // If WS send fails, fallback to API
+        sendViaApiIfNoWs(text);
+      }
+    } else {
+      // Fallback to API when WS disabled/unavailable
+      sendViaApiIfNoWs(text);
+    }
 
     // External callback if provided
     if (onSend) {
@@ -126,7 +175,7 @@ function ChatPanel({ initialMessages = [], onSend }) {
         // swallow for now
       }
     }
-  }, [input, onSend, sendMessage]);
+  }, [input, onSend, sendMessage, ws, sendViaApiIfNoWs]);
 
   const onKeyDown = useCallback(
     (e) => {
@@ -146,7 +195,9 @@ function ChatPanel({ initialMessages = [], onSend }) {
     <section className="panel chat-panel card-surface" aria-label="Chat panel">
       <div className="panel-header">
         <h2>Chat</h2>
-        <p className="muted">Type your message and press Enter to send.</p>
+        <p className="muted">
+          {ws.enabled ? (ws.connected ? 'Connected to assistant.' : 'Connecting…') : 'Type your message and press Enter to send.'}
+        </p>
       </div>
 
       <div className="chat-body">

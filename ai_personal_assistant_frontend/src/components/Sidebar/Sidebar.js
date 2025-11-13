@@ -2,68 +2,103 @@ import React, { useEffect, useId, useMemo, useState } from 'react';
 import './Sidebar.css';
 import TaskItem from './TaskItem';
 import EventItem from './EventItem';
+import { useTasks, useEvents } from '../../state/store';
+import tasksApi from '../../api/tasksApi';
+import eventsApi from '../../api/eventsApi';
 
 /**
  * PUBLIC_INTERFACE
  * Sidebar component providing "Tasks" and "Events" tabs with accessibility roles
  * and responsive behavior (overlay drawer on small screens, persistent on large).
  *
- * Props:
- * - onAddTask?: () => void
- * - onUpdateTask?: (taskId: string, patch: Partial<{ title: string; due: string; status: string }>) => void
- * - onAddEvent?: () => void
- * - onUpdateEvent?: (eventId: string, patch: Partial<{ title: string; datetime: string; location: string }>) => void
- *
  * Notes:
- * - Includes local mock data so UI renders before wiring to app state.
- * - Uses theme CSS variables from theme.css for consistent styling.
+ * - Loads tasks and events from APIs on mount with graceful mock fallback when env not configured.
+ * - Dispatches to global store and uses optimistic updates for add/update operations.
  */
-function Sidebar({
-  onAddTask,
-  onUpdateTask,
-  onAddEvent,
-  onUpdateEvent,
-}) {
+function Sidebar() {
   // Local responsive state for mobile overlay
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('tasks');
 
-  // Temporary mock data
-  const [tasks, setTasks] = useState(() => ([
-    { id: 't-1', title: 'Prepare weekly report', due: 'Fri 4:00 PM', status: 'pending' },
-    { id: 't-2', title: 'Pay credit card', due: 'Tomorrow', status: 'pending' },
-    { id: 't-3', title: 'Refactor assistant prompt', due: 'Next Mon', status: 'done' },
-  ]));
-  const [events, setEvents] = useState(() => ([
-    { id: 'e-1', title: '1:1 with Alex', datetime: 'Tue 2:30 PM', location: 'Room 3A' },
-    { id: 'e-2', title: 'Demo: Sprint Review', datetime: 'Fri 10:00 AM', location: 'Zoom' },
-  ]));
+  // Global tasks/events state
+  const { state: tasksState, addTask, updateTask, removeTask, setLoading: setTasksLoading } = useTasks();
+  const { state: eventsState, addEvent, updateEvent, removeEvent, setLoading: setEventsLoading } = useEvents();
 
-  // Wire-through handlers that call props if provided and update local mock for demo
-  const handleAddTask = () => {
-    const newTask = { id: `t-${Date.now()}`, title: 'New task', due: 'Later', status: 'pending' };
-    setTasks(prev => [newTask, ...prev]);
-    if (onAddTask) {
-      try { onAddTask(); } catch { /* noop */ }
+  // Initial load of tasks and events
+  useEffect(() => {
+    let cancelled = false;
+
+    const load = async () => {
+      setTasksLoading(true);
+      setEventsLoading(true);
+      try {
+        const [tResp, eResp] = await Promise.all([tasksApi.getTasks(), eventsApi.getEvents()]);
+        if (!cancelled) {
+          if (tResp?.ok && tResp.data?.items) {
+            // replace list by removing all then adding; since we only have add action, just add in order
+            const items = Array.isArray(tResp.data.items) ? tResp.data.items : [];
+            items.forEach((it) => addTask(it));
+          }
+          if (eResp?.ok && eResp.data?.items) {
+            const items = Array.isArray(eResp.data.items) ? eResp.data.items : [];
+            items.forEach((it) => addEvent(it));
+          }
+        }
+      } finally {
+        if (!cancelled) {
+          setTasksLoading(false);
+          setEventsLoading(false);
+        }
+      }
+    };
+    load();
+
+    return () => { cancelled = true; };
+  }, [addEvent, addTask, setEventsLoading, setTasksLoading]);
+
+  // Optimistic handlers
+  const handleAddTask = async () => {
+    const tempId = `t-${Date.now()}`;
+    const optimistic = { id: tempId, title: 'New task', due: 'Later', status: 'pending' };
+    addTask(optimistic);
+    const resp = await tasksApi.createTask({ title: optimistic.title, due: optimistic.due, status: optimistic.status });
+    if (resp?.ok && resp.data) {
+      // Replace temp by real if id differs
+      if (resp.data.id && resp.data.id !== tempId) {
+        removeTask(tempId);
+        addTask(resp.data);
+      }
     }
   };
-  const handleUpdateTask = (id, patch) => {
-    setTasks(prev => prev.map(t => (t.id === id ? { ...t, ...patch } : t)));
-    if (onUpdateTask) {
-      try { onUpdateTask(id, patch); } catch { /* noop */ }
+
+  const handleUpdateTask = async (id, patch) => {
+    // Optimistic update
+    updateTask(id, patch);
+    const resp = await tasksApi.updateTask(id, patch);
+    if (!resp?.ok) {
+      // If failed, we could refetch; for simplicity, leave optimistic state.
+      // In a real app, we might also enqueue a retry or show a toast.
     }
   };
-  const handleAddEvent = () => {
-    const newEvent = { id: `e-${Date.now()}`, title: 'New event', datetime: 'TBD', location: '' };
-    setEvents(prev => [newEvent, ...prev]);
-    if (onAddEvent) {
-      try { onAddEvent(); } catch { /* noop */ }
+
+  const handleAddEvent = async () => {
+    const tempId = `e-${Date.now()}`;
+    const optimistic = { id: tempId, title: 'New event', datetime: 'TBD', location: '' };
+    addEvent(optimistic);
+    const resp = await eventsApi.createEvent({ title: optimistic.title, datetime: optimistic.datetime, location: optimistic.location });
+    if (resp?.ok && resp.data) {
+      if (resp.data.id && resp.data.id !== tempId) {
+        removeEvent(tempId);
+        addEvent(resp.data);
+      }
     }
   };
-  const handleUpdateEvent = (id, patch) => {
-    setEvents(prev => prev.map(e => (e.id === id ? { ...e, ...patch } : e)));
-    if (onUpdateEvent) {
-      try { onUpdateEvent(id, patch); } catch { /* noop */ }
+
+  const handleUpdateEvent = async (id, patch) => {
+    updateEvent(id, patch);
+    const resp = await eventsApi.updateEvent(id, patch);
+    if (!resp?.ok) {
+      // same note as tasks
     }
   };
 
@@ -128,11 +163,11 @@ function Sidebar({
       hidden={activeTab !== 'tasks'}
       className="sidebar-scroller"
     >
-      {tasks.length === 0 ? (
-        <div className="empty">No tasks yet.</div>
+      {tasksState.items.length === 0 ? (
+        <div className="empty">{tasksState.loading ? 'Loading tasks…' : 'No tasks yet.'}</div>
       ) : (
         <ul className="item-list" role="list">
-          {tasks.map(task => (
+          {tasksState.items.map(task => (
             <TaskItem key={task.id} task={task} onUpdate={handleUpdateTask} />
           ))}
         </ul>
@@ -157,11 +192,11 @@ function Sidebar({
       hidden={activeTab !== 'events'}
       className="sidebar-scroller"
     >
-      {events.length === 0 ? (
-        <div className="empty">No events yet.</div>
+      {eventsState.items.length === 0 ? (
+        <div className="empty">{eventsState.loading ? 'Loading events…' : 'No events yet.'}</div>
       ) : (
         <ul className="item-list" role="list">
-          {events.map(event => (
+          {eventsState.items.map(event => (
             <EventItem key={event.id} event={event} onUpdate={handleUpdateEvent} />
           ))}
         </ul>

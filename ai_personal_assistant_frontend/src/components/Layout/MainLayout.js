@@ -33,12 +33,8 @@ function MainLayout({ theme, onToggleTheme, onOpenSettings }) {
           ]}
         />
 
-        <Sidebar
-          onAddTask={() => { /* placeholder for future wiring */ }}
-          onUpdateTask={() => { /* placeholder for future wiring */ }}
-          onAddEvent={() => { /* placeholder for future wiring */ }}
-          onUpdateEvent={() => { /* placeholder for future wiring */ }}
-        />
+        {/* Sidebar reads and writes via global store and APIs internally */}
+        <Sidebar />
       </main>
     </div>
   );
