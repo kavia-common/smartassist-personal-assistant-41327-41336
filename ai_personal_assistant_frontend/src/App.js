@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import './App.css';
 import './index.css';
 import MainLayout from './components/Layout/MainLayout';
+import SettingsModal from './components/Settings/SettingsModal';
 
 // PUBLIC_INTERFACE
 function App() {
@@ -28,13 +29,10 @@ function App() {
     setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
   }, []);
 
-  // Stub handlers until features are implemented
-  const handleOpenSettings = useCallback(() => {
-    // This will be wired to a settings modal/page later
-    // For now, just log
-    // eslint-disable-next-line no-console
-    console.log('Open settings clicked');
-  }, []);
+  // Settings modal state
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const handleOpenSettings = useCallback(() => setSettingsOpen(true), []);
+  const handleCloseSettings = useCallback(() => setSettingsOpen(false), []);
 
   return (
     <div className="App">
@@ -42,6 +40,12 @@ function App() {
         theme={theme}
         onToggleTheme={toggleTheme}
         onOpenSettings={handleOpenSettings}
+      />
+      <SettingsModal
+        isOpen={settingsOpen}
+        onClose={handleCloseSettings}
+        theme={theme}
+        onToggleTheme={toggleTheme}
       />
     </div>
   );

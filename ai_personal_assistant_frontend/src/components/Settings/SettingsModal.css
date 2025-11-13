@@ -1,0 +1,230 @@
+.settings-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  backdrop-filter: blur(2px);
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  z-index: 60;
+}
+
+.settings-modal-panel {
+  width: min(720px, 100%);
+  max-height: 88vh;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.settings-modal-header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--primary) 4%, var(--surface));
+}
+.settings-title {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+}
+.settings-desc {
+  margin: 0.25rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+}
+.icon-close {
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.4rem 0.6rem;
+}
+
+.settings-modal-body {
+  overflow: auto;
+  padding: 0.75rem;
+}
+
+.settings-sections {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.settings-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-xs);
+}
+.section-title {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+.section-content {
+  padding: 0.9rem 1rem;
+}
+
+/* Profile */
+.profile-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.85rem;
+  align-items: start;
+}
+.avatar {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--primary) 10%, var(--surface));
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-xs);
+}
+.profile-fields {
+  display: grid;
+  gap: 0.6rem;
+}
+.field {
+  display: grid;
+  gap: 0.25rem;
+}
+.field .label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+.actions {
+  margin-top: 0.75rem;
+}
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+  border: 1px solid color-mix(in srgb, var(--primary) 50%, transparent);
+}
+
+/* Preferences */
+.pref-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+}
+.pref-title {
+  margin: 0;
+  color: var(--text-primary);
+}
+.pref-desc {
+  margin: 0.15rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+/* Toggle Switch */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 42px;
+  height: 24px;
+}
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background: color-mix(in srgb, var(--primary) 12%, var(--surface));
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  transition: background-color 180ms ease, border-color 180ms ease;
+}
+.slider::before {
+  content: "";
+  position: absolute;
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  transition: transform 180ms ease, background-color 180ms ease;
+  box-shadow: var(--shadow-xs);
+}
+.switch input:checked + .slider {
+  background: var(--primary);
+  border-color: color-mix(in srgb, var(--primary) 60%, transparent);
+}
+.switch input:checked + .slider::before {
+  transform: translate(18px, -50%);
+  background: #fff;
+}
+
+/* Integrations */
+.integrations {
+  display: grid;
+  gap: 0.6rem;
+}
+.integration-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--primary) 4%, var(--surface));
+}
+.integration-card .icon {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--primary) 10%, var(--surface));
+  border: 1px solid var(--border);
+}
+.integration-card .info .name {
+  margin: 0;
+  font-size: 0.98rem;
+  color: var(--text-primary);
+}
+.integration-card .info .desc {
+  margin: 0.1rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+/* Footer */
+.settings-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid var(--border);
+  background: color-mix(in srgb, var(--primary) 4%, var(--surface));
+}
+
+/* Buttons */
+.btn-ghost {
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.45rem 0.7rem;
+}
